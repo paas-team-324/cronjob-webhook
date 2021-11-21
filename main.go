@@ -31,6 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	"github.com/paas-team-324/cronjob-webhook/webhooks"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -87,7 +89,7 @@ func main() {
 	}
 
 	// setup admission webhook
-	mgr.GetWebhookServer().Register("/validate-batch-v1-cronjob", &webhook.Admission{Handler: &cronJobValidationHandler{Client: mgr.GetClient()}})
+	mgr.GetWebhookServer().Register("/validate-batch-v1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobValidationHandler{Client: mgr.GetClient()}})
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

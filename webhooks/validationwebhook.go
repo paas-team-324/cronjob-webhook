@@ -1,4 +1,4 @@
-package main
+package webhooks
 
 import (
 	"context"
@@ -12,13 +12,13 @@ import (
 // +kubebuilder:webhook:path=/validate-batch-v1-cronjob,mutating=false,failurePolicy=fail,groups="batch",resources=cronjobs,verbs=create;update,versions=v1,name=vcronjob.kb.io,admissionReviewVersions=v1beta1,sideEffects=None
 
 // implement admission handler
-type cronJobValidationHandler struct {
+type CronJobValidationHandler struct {
 	Client  client.Client
 	decoder *admission.Decoder
 }
 
 // admission handler itself
-func (v *cronJobValidationHandler) Handle(ctx context.Context, req admission.Request) admission.Response {
+func (v *CronJobValidationHandler) Handle(ctx context.Context, req admission.Request) admission.Response {
 	cronJob := &batchv1.CronJob{}
 
 	// decode cronjob object
@@ -35,7 +35,7 @@ func (v *cronJobValidationHandler) Handle(ctx context.Context, req admission.Req
 	return admission.Allowed("")
 }
 
-func (v *cronJobValidationHandler) InjectDecoder(d *admission.Decoder) error {
+func (v *CronJobValidationHandler) InjectDecoder(d *admission.Decoder) error {
 	v.decoder = d
 	return nil
 }
