@@ -1,0 +1,5 @@
+layout:
+- go.kubebuilder.io/v3
+projectName: cronjob-webhook
+repo: github.com/paas-team-324/cronjob-webhook
+version: "3"
