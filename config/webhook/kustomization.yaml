@@ -1,0 +1,9 @@
+patchesStrategicMerge:
+- patches/service_ca_in_validating_webhooks.yaml
+
+resources:
+- manifests.yaml
+- service.yaml
+
+configurations:
+- kustomizeconfig.yaml
