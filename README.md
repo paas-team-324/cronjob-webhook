@@ -1,6 +1,6 @@
 # CronJob Webhook
 
-Custom CronJob webhooks. Scaffoled with kubebuilder based on [the following](https://book.kubebuilder.io/reference/webhook-for-core-types.html) guide.
+Custom CronJob webhooks. Scaffolded with kubebuilder using [the following](https://book.kubebuilder.io/reference/webhook-for-core-types.html) guide.
 
 # Example
 
