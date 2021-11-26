@@ -26,3 +26,4 @@ testbin/*
 
 # bundle dir
 deploy
+config/webhook/certs

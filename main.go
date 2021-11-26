@@ -69,8 +69,7 @@ func main() {
 		MetricsBindAddress:     metricsAddr,
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "bd992633.election",
+		LeaderElection:         false,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -88,8 +87,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	// setup admission webhook
-	mgr.GetWebhookServer().Register("/validate-batch-v1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobValidationHandler{Client: mgr.GetClient()}})
+	// setup admission webhooks
+	mgr.GetWebhookServer().Register("/validate-batch-v2alpha1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobValidationHandler_v2alpha1{CronJobValidationHandler: webhooks.CronJobValidationHandler{Client: mgr.GetClient()}}})
+	mgr.GetWebhookServer().Register("/validate-batch-v1beta1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobValidationHandler_v1beta1{CronJobValidationHandler: webhooks.CronJobValidationHandler{Client: mgr.GetClient()}}})
+	mgr.GetWebhookServer().Register("/validate-batch-v1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobValidationHandler_v1{CronJobValidationHandler: webhooks.CronJobValidationHandler{Client: mgr.GetClient()}}})
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
