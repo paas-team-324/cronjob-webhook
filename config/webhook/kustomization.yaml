@@ -1,9 +1,33 @@
-patchesStrategicMerge:
-- patches/service_ca_in_validating_webhooks.yaml
-
 resources:
-- manifests.yaml
+- versions/batch-v1-cronjob_admissionregistration.k8s.io-v1-validatingwebhookconfiguration.yaml
+- versions/batch-v1beta1-cronjob_admissionregistration.k8s.io-v1-validatingwebhookconfiguration.yaml
+- versions/batch-v1beta1-cronjob_admissionregistration.k8s.io-v1beta1-validatingwebhookconfiguration.yaml
+- versions/batch-v2alpha1-cronjob_admissionregistration.k8s.io-v1beta1-validatingwebhookconfiguration.yaml
 - service.yaml
 
 configurations:
 - kustomizeconfig.yaml
+
+secretGenerator:
+- name: webhook-server-cert
+  files:
+  - certs/tls.crt
+  - certs/tls.key
+  type: "kubernetes.io/tls"
+
+configMapGenerator:
+- name: ca-cert
+  files:
+  - certs/ca.pem.b64
+
+vars:
+- name: CA_CERT_B64
+  objref:
+    kind: ConfigMap
+    name: ca-cert
+    apiVersion: v1
+  fieldref:
+    fieldpath: data.[ca.pem.b64]
+
+generatorOptions:
+  disableNameSuffixHash: true

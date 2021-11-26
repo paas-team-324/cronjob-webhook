@@ -17,6 +17,33 @@ endif
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
+# self signed cert variable
+NAMESPACE ?= cronjob-webhook-system
+define WEBHOOK_CERT_REQ
+[req]
+distinguished_name = webhooks
+req_extensions = v3_req
+x509_extensions = v3_req
+prompt = no
+
+[webhooks]
+C = US
+ST = VA
+L = SomeCity
+O = MyCompany
+OU = MyDivision
+CN = cronjob-webhook-webhook-service.$(NAMESPACE).svc
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = cronjob-webhook-webhook-service.$(NAMESPACE).svc
+endef
+export WEBHOOK_CERT_REQ
+
 .PHONY: all
 all: build
 
@@ -83,6 +110,10 @@ ifndef ignore-not-found
   ignore-not-found = false
 endif
 
+.PHONY: ensure_deploy_dir
+ensure_deploy_dir:
+	mkdir -p deploy 
+
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
@@ -92,18 +123,30 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: bundle
-bundle: manifests kustomize ## Generate YAML bundle to be applied
-	mkdir -p deploy
+bundle: manifests kustomize ensure_deploy_dir certs ## Generate YAML bundle to be applied
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	cd config/default && $(KUSTOMIZE) edit set namespace $(NAMESPACE)
 	$(KUSTOMIZE) build config/default > deploy/bundle.yaml
 
+.PHONY: certs
+certs: ensure_deploy_dir
+	mkdir -p config/webhook/certs
+	ln -sf ../config/webhook/certs deploy/certs
+	@echo "$$WEBHOOK_CERT_REQ" | openssl req -nodes -newkey rsa:4096 \
+  		-keyout deploy/certs/tls.key \
+  		-out deploy/certs/tls.crt \
+  		-config /dev/stdin \
+  		-x509 -days 36500
+	cat deploy/certs/tls.crt | base64 -w0 > deploy/certs/ca.pem.b64
+
 .PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests kustomize certs ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	cd config/default && $(KUSTOMIZE) edit set namespace $(NAMESPACE)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: undeploy
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+undeploy: certs ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
