@@ -47,9 +47,9 @@ make bundle IMG=$IMAGE NAMESPACE=$NAMESPACE
 
 # generate long lasting certificate
 make certs NAMESPACE=$NAMESPACE
-oc create secret tls webhook-server-cert --cert=deploy/certs/tls.crt --key=deploy/certs/tls.key
+oc create secret tls webhook-server-cert --cert=deploy/certs/tls.crt --key=deploy/certs/tls.key -n $NAMESPACE
 
-# substitute in bundle and create
+# substitute CA in bundle and create
 CA_CERT_B64=$(cat deploy/certs/ca.pem.b64) envsubst < deploy/bundle.yaml | oc create -f -
 oc create -f examples/
 ```
