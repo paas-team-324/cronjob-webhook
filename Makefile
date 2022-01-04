@@ -110,8 +110,8 @@ ifndef ignore-not-found
   ignore-not-found = false
 endif
 
-.PHONY: ensure_deploy_dir
-ensure_deploy_dir:
+.PHONY: create_deploy_dir
+create_deploy_dir:
 	mkdir -p deploy 
 
 .PHONY: install
@@ -123,15 +123,14 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: bundle
-bundle: manifests kustomize ensure_deploy_dir certs ## Generate YAML bundle to be applied
+bundle: manifests kustomize create_deploy_dir ## Generate YAML bundle to be applied
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	cd config/default && $(KUSTOMIZE) edit set namespace $(NAMESPACE)
 	$(KUSTOMIZE) build config/default > deploy/bundle.yaml
 
 .PHONY: certs
-certs: ensure_deploy_dir
-	mkdir -p config/webhook/certs
-	ln -sf ../config/webhook/certs deploy/certs
+certs: create_deploy_dir
+	mkdir -p deploy/certs
 	@echo "$$WEBHOOK_CERT_REQ" | openssl req -nodes -newkey rsa:4096 \
   		-keyout deploy/certs/tls.key \
   		-out deploy/certs/tls.crt \
@@ -140,13 +139,13 @@ certs: ensure_deploy_dir
 	cat deploy/certs/tls.crt | base64 -w0 > deploy/certs/ca.pem.b64
 
 .PHONY: deploy
-deploy: manifests kustomize certs ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	cd config/default && $(KUSTOMIZE) edit set namespace $(NAMESPACE)
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: undeploy
-undeploy: certs ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen

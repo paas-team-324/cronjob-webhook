@@ -9,8 +9,6 @@ namespace: cronjob-webhook-system
 namePrefix: cronjob-webhook-
 
 
-patchesStrategicMerge:
-- manager_webhook_patch.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:

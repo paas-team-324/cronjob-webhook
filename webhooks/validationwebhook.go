@@ -2,7 +2,9 @@ package webhooks
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"reflect"
 
 	batchv1 "k8s.io/api/batch/v1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
@@ -13,25 +15,25 @@ import (
 )
 
 // implement admission handler
-type CronJobValidationHandler struct {
+type CronJobMutationHandler struct {
 	Client  client.Client
 	decoder *admission.Decoder
 }
 
-type CronJobValidationHandler_v2alpha1 struct {
-	CronJobValidationHandler
+type CronJobMutationHandler_v2alpha1 struct {
+	CronJobMutationHandler
 }
 
-type CronJobValidationHandler_v1beta1 struct {
-	CronJobValidationHandler
+type CronJobMutationHandler_v1beta1 struct {
+	CronJobMutationHandler
 }
 
-type CronJobValidationHandler_v1 struct {
-	CronJobValidationHandler
+type CronJobMutationHandler_v1 struct {
+	CronJobMutationHandler
 }
 
 // admission handler for batch-v2alpha1-cronjob (k8s 1.10, OpenShift 3.10)
-func (v *CronJobValidationHandler_v2alpha1) Handle(ctx context.Context, req admission.Request) admission.Response {
+func (v *CronJobMutationHandler_v2alpha1) Handle(ctx context.Context, req admission.Request) admission.Response {
 	cronJob := &batchv2alpha1.CronJob{}
 
 	// decode cronjob object
@@ -40,11 +42,17 @@ func (v *CronJobValidationHandler_v2alpha1) Handle(ctx context.Context, req admi
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	return validate_cronjob(string(cronJob.Spec.ConcurrencyPolicy))
+	// mutate cronjob
+	marshaledCronJob, err := mutate_cronjob(cronJob)
+	if err != nil {
+		admission.Errored(http.StatusInternalServerError, err)
+	}
+
+	return admission.PatchResponseFromRaw(req.Object.Raw, marshaledCronJob)
 }
 
 // admission handler for batch-v1beta1-cronjob (k8s 1.11, OpenShift 3.11)
-func (v *CronJobValidationHandler_v1beta1) Handle(ctx context.Context, req admission.Request) admission.Response {
+func (v *CronJobMutationHandler_v1beta1) Handle(ctx context.Context, req admission.Request) admission.Response {
 	cronJob := &batchv1beta1.CronJob{}
 
 	// decode cronjob object
@@ -53,11 +61,17 @@ func (v *CronJobValidationHandler_v1beta1) Handle(ctx context.Context, req admis
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	return validate_cronjob(string(cronJob.Spec.ConcurrencyPolicy))
+	// mutate cronjob
+	marshaledCronJob, err := mutate_cronjob(cronJob)
+	if err != nil {
+		admission.Errored(http.StatusInternalServerError, err)
+	}
+
+	return admission.PatchResponseFromRaw(req.Object.Raw, marshaledCronJob)
 }
 
 // admission handler for batch-v1-cronjob (k8s 1.22, OpenShift 4.9)
-func (v *CronJobValidationHandler_v1) Handle(ctx context.Context, req admission.Request) admission.Response {
+func (v *CronJobMutationHandler_v1) Handle(ctx context.Context, req admission.Request) admission.Response {
 	cronJob := &batchv1.CronJob{}
 
 	// decode cronjob object
@@ -66,20 +80,30 @@ func (v *CronJobValidationHandler_v1) Handle(ctx context.Context, req admission.
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	return validate_cronjob(string(cronJob.Spec.ConcurrencyPolicy))
-}
-
-func validate_cronjob(concurrencyPolicy string) admission.Response {
-
-	// forbid cronjobs with allowed concurrent jobs
-	if concurrencyPolicy == "Allow" {
-		return admission.Denied("CronJobs with concurrency policy set to 'Allow' are forbidden")
+	// mutate cronjob
+	marshaledCronJob, err := mutate_cronjob(cronJob)
+	if err != nil {
+		admission.Errored(http.StatusInternalServerError, err)
 	}
 
-	return admission.Allowed("")
+	return admission.PatchResponseFromRaw(req.Object.Raw, marshaledCronJob)
 }
 
-func (v *CronJobValidationHandler) InjectDecoder(d *admission.Decoder) error {
+func mutate_cronjob(cronJob interface{}) ([]byte, error) {
+
+	// forbid concurrent jobs
+	reflect.ValueOf(cronJob).Elem().FieldByName("Spec").FieldByName("ConcurrencyPolicy").SetString("Forbid")
+
+	// unmarshal cronjob as bytes
+	marshaledCronJob, err := json.Marshal(cronJob)
+	if err != nil {
+		return nil, err
+	}
+
+	return marshaledCronJob, nil
+}
+
+func (v *CronJobMutationHandler) InjectDecoder(d *admission.Decoder) error {
 	v.decoder = d
 	return nil
 }

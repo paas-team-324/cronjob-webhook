@@ -57,7 +57,7 @@ func main() {
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 	opts := zap.Options{
-		Development: true,
+		Development: false,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
@@ -88,9 +88,9 @@ func main() {
 	}
 
 	// setup admission webhooks
-	mgr.GetWebhookServer().Register("/validate-batch-v2alpha1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobValidationHandler_v2alpha1{CronJobValidationHandler: webhooks.CronJobValidationHandler{Client: mgr.GetClient()}}})
-	mgr.GetWebhookServer().Register("/validate-batch-v1beta1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobValidationHandler_v1beta1{CronJobValidationHandler: webhooks.CronJobValidationHandler{Client: mgr.GetClient()}}})
-	mgr.GetWebhookServer().Register("/validate-batch-v1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobValidationHandler_v1{CronJobValidationHandler: webhooks.CronJobValidationHandler{Client: mgr.GetClient()}}})
+	mgr.GetWebhookServer().Register("/mutate-batch-v2alpha1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobMutationHandler_v2alpha1{CronJobMutationHandler: webhooks.CronJobMutationHandler{Client: mgr.GetClient()}}})
+	mgr.GetWebhookServer().Register("/mutate-batch-v1beta1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobMutationHandler_v1beta1{CronJobMutationHandler: webhooks.CronJobMutationHandler{Client: mgr.GetClient()}}})
+	mgr.GetWebhookServer().Register("/mutate-batch-v1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobMutationHandler_v1{CronJobMutationHandler: webhooks.CronJobMutationHandler{Client: mgr.GetClient()}}})
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

@@ -1,21 +1,22 @@
 # OpenShift 4.9 (k8s 1.22)
 ---
 apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
+kind: MutatingWebhookConfiguration
 metadata:
-  creationTimestamp: null
-  name: validating-webhook-configuration-v1-v1
+  annotations:
+    description: OpenShift 4.9 (k8s 1.22)
+    service.beta.openshift.io/inject-cabundle: "true"
+  name: mutating-webhook-configuration-v1-v1
 webhooks:
 - admissionReviewVersions:
   - v1
   - v1beta1
   clientConfig:
-    caBundle: $(CA_CERT_B64)
+    caBundle: ""
     service:
       name: webhook-service
       namespace: system
-      path: /validate-batch-v1-cronjob
-  failurePolicy: Fail
+      path: /mutate-batch-v1-cronjob
   name: vcronjob.kb.io
   rules:
   - apiGroups:

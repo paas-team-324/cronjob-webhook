@@ -1,0 +1,31 @@
+# OpenShift 4.6 (k8s 1.19)
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    description: OpenShift 4.6 (k8s 1.19)
+    service.beta.openshift.io/inject-cabundle: "true"
+  name: mutating-webhook-configuration-v1beta1-v1
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    caBundle: ""
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-batch-v1beta1-cronjob
+  name: vcronjob.kb.io
+  rules:
+  - apiGroups:
+    - batch
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - cronjobs
+  sideEffects: None
