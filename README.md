@@ -2,7 +2,7 @@
 
 Custom CronJob webhooks. Scaffolded with kubebuilder using [the following](https://book.kubebuilder.io/reference/webhook-for-core-types.html) guide.
 
-# Development
+## Development
 
 Edit the code, then do the following in order to build the image:
 
@@ -15,10 +15,9 @@ make docker-build IMG=$IMAGE
 make docker-push IMG=$IMAGE
 ```
 
-# Deployment (OpenShift 4.x)
+## Deployment (OpenShift 4.x)
 
-In OpenShift 4, webhook service utilizes service CA.
-Once the image is in the registry, do the following in order to deploy:
+In OpenShift 4, webhook service utilizes service CA. Once the image is in the registry, do the following in order to deploy:
 
 ```bash
 IMAGE=docker.io/paasteam324/cronjob-webhook:<version>
@@ -31,7 +30,7 @@ oc create -f deploy/bundle.yaml
 oc create -f examples/
 ```
 
-# Deployment (OpenShift 3.x)
+## Deployment (OpenShift 3.x)
 
 There is no service CA functionality in OpenShift 3, so the certs must be generated and substituted manually.
 
