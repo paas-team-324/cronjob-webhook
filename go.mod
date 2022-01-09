@@ -5,6 +5,7 @@ go 1.16
 replace k8s.io/api-v0.20.13 => k8s.io/api v0.20.13
 
 require (
+	gomodules.xyz/jsonpatch/v2 v2.2.0
 	k8s.io/api v0.22.1
 	k8s.io/api-v0.20.13 v0.0.0-00010101000000-000000000000
 	k8s.io/apimachinery v0.22.1

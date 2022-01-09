@@ -1,9 +1,8 @@
 resources:
 - service.yaml
 
-## for OpenShift 4.x
-- versions/batch-v1-cronjob_admissionregistration.k8s.io-v1-mutatingwebhookconfiguration.yaml
-- versions/batch-v1beta1-cronjob_admissionregistration.k8s.io-v1-mutatingwebhookconfiguration.yaml
+## for OpenShift 4.6+
+- versions/batch-v1beta1-v1-cronjob_admissionregistration.k8s.io-v1-mutatingwebhookconfiguration.yaml
 
 ## for OpenShift 3.x
 # - versions/batch-v1beta1-cronjob_admissionregistration.k8s.io-v1beta1-mutatingwebhookconfiguration.yaml

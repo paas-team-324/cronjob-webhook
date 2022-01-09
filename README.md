@@ -15,7 +15,30 @@ make docker-build IMG=$IMAGE
 make docker-push IMG=$IMAGE
 ```
 
-## Deployment (OpenShift 4.x)
+## Transfer (for disconnected installation)
+
+In case you are installing in a disconnected environment, here's how you package the webhook:
+
+```bash
+IMAGE=docker.io/paasteam324/cronjob-webhook:<version>
+
+# webhook server image
+docker pull $IMAGE
+docker save $IMAGE -o cronjob-webhook-image.tar
+
+# download binaries
+make controller-gen
+make kustomize
+
+# package
+7za a cronjob-webhook.7z .
+```
+
+## Deployment
+
+Deployment varies between OpenShift 3 and OpenShift 4.
+
+### Deployment (OpenShift 4.x)
 
 In OpenShift 4, webhook service utilizes service CA. Once the image is in the registry, do the following in order to deploy:
 
@@ -30,7 +53,7 @@ oc create -f deploy/bundle.yaml
 oc create -f examples/
 ```
 
-## Deployment (OpenShift 3.x)
+### Deployment (OpenShift 3.x)
 
 There is no service CA functionality in OpenShift 3, so the certs must be generated and substituted manually.
 

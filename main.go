@@ -87,10 +87,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// setup admission webhooks
-	mgr.GetWebhookServer().Register("/mutate-batch-v2alpha1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobMutationHandler_v2alpha1{CronJobMutationHandler: webhooks.CronJobMutationHandler{Client: mgr.GetClient()}}})
-	mgr.GetWebhookServer().Register("/mutate-batch-v1beta1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobMutationHandler_v1beta1{CronJobMutationHandler: webhooks.CronJobMutationHandler{Client: mgr.GetClient()}}})
-	mgr.GetWebhookServer().Register("/mutate-batch-v1-cronjob", &webhook.Admission{Handler: &webhooks.CronJobMutationHandler_v1{CronJobMutationHandler: webhooks.CronJobMutationHandler{Client: mgr.GetClient()}}})
+	// setup admission webhook
+	mgr.GetWebhookServer().Register("/mutate-cronjob", &webhook.Admission{Handler: &webhooks.CronJobMutationHandler{Client: mgr.GetClient()}})
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

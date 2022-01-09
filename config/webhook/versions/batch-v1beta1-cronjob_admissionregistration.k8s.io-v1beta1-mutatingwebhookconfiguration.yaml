@@ -15,7 +15,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-batch-v1beta1-cronjob
+      path: /mutate-cronjob
   name: vcronjob.kb.io
   rules:
   - apiGroups:
